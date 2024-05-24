@@ -1,0 +1,42 @@
+#include <pic18f4550.h>
+#include <stdio.h>
+
+#define FOSC 48000000UL  // Define the oscillator frequency
+
+void InitUART(unsigned int baudrate) {
+    TRISCbits.RC6 = 0;  // Set RC6 as output (TX)
+    TRISCbits.RC7 = 1;  // Set RC7 as input (RX)
+    
+    INTCONbits.GIE = 1;  // Enable global interrupts
+    INTCONbits.PEIE = 1; // Enable peripheral interrupts
+    
+    SPBRG = (FOSC / (64UL * baudrate)) - 1;  // Calculate and set baud rate
+    
+    BAUDCON = 0b00000000; // Set baud control register (8-bit mode, no auto-baud)
+    TXSTA = 0b00100000;   // Transmit Status and Control Register (enable transmitter)
+    RCSTA = 0b10010000;   // Receive Status and Control Register (enable serial port, enable receiver)
+}
+
+void SendChar(unsigned char data) {
+    while (TXSTAbits.TRMT == 0);  // Wait until the transmit shift register is empty
+    TXREG = data;  // Transmit data
+}
+
+void putch(unsigned char data) {
+    SendChar(data);  // Custom putchar function for printf
+}
+
+unsigned char GetChar(void) {
+    while (!PIR1bits.RCIF);  // Wait until data is received
+    return RCREG;  // Return received data
+}
+
+void main(void) {
+    InitUART(9600);  // Initialize UART with baud rate 9600
+    
+    printf("\r\nHello MicroPIC-18F: Enter any key from keyboard\r\n");
+    
+    while (1) {
+        printf("%c", GetChar());  // Echo received character
+    }
+}
