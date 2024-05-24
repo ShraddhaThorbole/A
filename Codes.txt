@@ -217,7 +217,7 @@ void external_interrupt_init()
 
 void interrupt ISR()
 {
-             LATAbits.LA4 = 1;
+             LATAbits.LA4 = ~LATAbits.LA4;
              delay();
              INTCON3bits.INT1IF=0;
         
